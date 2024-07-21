@@ -3,21 +3,21 @@ import mediapipe as mp
 import numpy as np
 import csv
 
-# เริ่มต้น MediaPipe Hands.
+# start MediaPipe Hands.
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7)
 
-# เริ่มต้น MediaPipe Drawing.
+# start MediaPipe Drawing.
 mp_drawing = mp.solutions.drawing_utils
 
-# เริ่มต้นการทำงานของเว็บแคม.
+# start webcam
 cap = cv2.VideoCapture(0)
 
-# ตั้งค่าท่าทางที่ต้องการเก็บข้อมูล.
+# set get_data.
 gestures = ['headache', 'sore_throat', 'runny_nose', 'eye_hurt']
 current_gesture = gestures[0]
 
-# สร้างไฟล์ CSV สำหรับเก็บข้อมูล
+# csv
 with open('hand_gesture_data.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow(['label'] + [f'x{i}' for i in range(21)] + [f'y{i}' for i in range(21)] + [f'z{i}' for i in range(21)])
@@ -27,28 +27,28 @@ with open('hand_gesture_data.csv', 'w', newline='') as f:
         if not ret:
             break
 
-        # แปลงภาพจาก BGR เป็น RGB.
+        # BGR to RGB
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
 
-        # ประมวลผลภาพและตรวจจับมือ.
+        # tracking hands
         results = hands.process(image)
 
-        # วาดจุดเชื่อมโยงบนมือ.
+        # draw
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
                 mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
                 
-                # สกัดจุดเชื่อมโยงสำหรับการรู้จำท่าทาง.
+                # เชื่อมจุด
                 landmarks = []
                 for lm in hand_landmarks.landmark:
                     landmarks.append(lm.x)
                     landmarks.append(lm.y)
                     landmarks.append(lm.z)
                 
-                # เขียนข้อมูลลงในไฟล์ CSV.
+                # write to CSV.
                 writer.writerow([current_gesture] + landmarks)
         
         # แสดงข้อความบนภาพเพื่อระบุท่าทางที่กำลังเก็บข้อมูล.
